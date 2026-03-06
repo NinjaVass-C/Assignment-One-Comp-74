@@ -7,6 +7,8 @@ import { parseArgs } from "util";
  * Description: A basic CLI tool to validate the endpoints for the
  * Hyrule-Compendium-API. Validates three basic endpoints (see document for more details),
  * with error handling for invalid requests/responses.
+ *
+ * For more information about the API, visit https://gadhagod.github.io/Hyrule-Compendium-API/#/
  */
 
 
