@@ -2,7 +2,6 @@ import { parseArgs } from "util";
 
 type Args = {
     api_url: string;
-    param: string;
     endpoint: string;
 }
 
@@ -77,31 +76,33 @@ function parseCommands() {
         throw new Error('Error: No path param provided');
     }
 
-    let param = values.pathParam
+    let param = values.pathParam.toLowerCase();
     let api_url = ''
     switch (values.endpoint) {
         case 'entry':
-            api_url = 'https://botw-compendium.herokuapp.com/api/v3/compendium/entry/'
+            api_url = 'https://botw-compendium.herokuapp.com/api/v3/compendium/entry/' + param
             break
         case 'region':
-            api_url = 'https://botw-compendium.herokuapp.com/api/v3/regions/'
+            if (param === 'all') {
+                throw new Error('Does not support all regions');
+            }
+            api_url = 'https://botw-compendium.herokuapp.com/api/v3/regions/' + param
             break
         case 'category':
-            api_url = 'https://botw-compendium.herokuapp.com/api/v3/compendium/category/'
+            api_url = 'https://botw-compendium.herokuapp.com/api/v3/compendium/category/' + param
             break
         default:
             throw new Error('Unsupported endpoint : ' + values.endpoint)
     }
     let args: Args = {
         api_url: api_url,
-        param: param,
         endpoint: values.endpoint
     }
     return args
 }
 
 async function fetchData(args: Args) {
-    const url = args.api_url + args.param
+    const url = args.api_url
     const response = await fetch(url);
     const data: any = await response.json();
     if (!response.ok) {
@@ -166,10 +167,24 @@ function formatOutput(data: any) {
             console.log(`${key}: No values found`)
         }
         else {
-            console.log(`${key}: ${value}`);
+            if ((key === 'shrines' || key === 'dlc_shrines')) {
+                console.log(`${key}:`)
+                outputShrines(value)
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+
         }
     }
     console.log('---------------------------')
+}
+
+function outputShrines(shrines: any) {
+    const shrineArray: Shrine[] = shrines
+    shrineArray.forEach((shrine: Shrine) => {
+        console.log('   - name: ' + shrine.name)
+        console.log('     puzzle: ' + shrine.puzzle)
+    });
 }
 
 async function main() {
