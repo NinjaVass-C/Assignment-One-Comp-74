@@ -44,14 +44,10 @@ type Entry = {
 type Monster = Entry & {
     drops: string[]
 }
-// extra fields needed for equipment responses
-type EquipmentProperties = {
-    attack: number,
-    defense: number
-}
 // extra field needed for entry with category equipment
 type Equipment = Entry & {
-    properties: EquipmentProperties
+    attack: string,
+    defense: string,
 }
 
 // extra fields needed for entry with category material
@@ -122,6 +118,7 @@ function parseCommands() {
     }
     return args
 }
+
 // fetches data from api based of cli arguments/validation, then calls associated format for data
 async function fetchData(args: Args) {
     const url = args.api_url
@@ -157,6 +154,7 @@ async function fetchData(args: Args) {
             throw new Error('Unsupported endpoint : ' + args.endpoint)
     }
 }
+
 // function to format each response relating to compendium entries,
 // assigning them to their respective custom type
 function formatEntry(data: any) {
@@ -186,7 +184,7 @@ function formatEntry(data: any) {
 }
 
 // format the console output to make data easier to understand/more readable
-function formatOutput(data: any) {
+function formatOutput(data: Object) {
 
     for (const [key, value] of Object.entries(data)) {
         // check for how the api returns no data fields, either null, blank, or empty array
@@ -199,7 +197,18 @@ function formatOutput(data: any) {
             if ((key === 'shrines' || key === 'dlc_shrines')) {
                 console.log(`${key}:`)
                 outputShrines(value)
-            } else {
+                // conditional logic for equipment properties
+            } else if (key === 'properties'){
+                console.log(`${key}:`)
+                if ('attack' in value && value.attack !== 0) {
+                    console.log('attack: ' + value.attack)
+                    console.log('defense: Offensive equipment - no defensive value')
+                } else {
+                    console.log('attack: defensive equipment - no offensive value')
+                    console.log('defense: ' + value.defense)
+                }
+            }
+            else {
                 console.log(`${key}: ${value}`);
             }
 
@@ -207,6 +216,7 @@ function formatOutput(data: any) {
     }
     console.log('---------------------------')
 }
+
 // Formats information about shrines in a nicer way,
 // separate function used for readability.
 function outputShrines(shrines: any) {
@@ -216,6 +226,7 @@ function outputShrines(shrines: any) {
         console.log('     puzzle: ' + shrine.puzzle)
     });
 }
+
 // main function
 async function main() {
     try {
