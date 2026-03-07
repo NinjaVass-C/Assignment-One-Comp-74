@@ -317,7 +317,6 @@ function validateMaterials(entry: any) {
         typeof entry.cooking_effect === 'string'
 }
 function validateMonsters(entry: any) {
-    console.log(typeof entry.drops)
     return validateBaseEntry(entry) &&
         typeof entry.drops === 'object'
 }
