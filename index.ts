@@ -217,39 +217,52 @@ function validateResponse(data: any, validation_type: string) {
     switch (validation_type) {
         case 'monsters':
             isValid = validateMonsters(data)
-            validatedData = data as Monster
+            if (isValid) {
+                validatedData = data as Monster
+            }
             break
         case 'equipment':
             isValid = validateEquipment(data)
-            validatedData = data as Equipment
+            if (isValid) {
+                validatedData = data as Equipment
+            }
             break
         case 'materials':
             isValid = validateMaterials(data)
-            validatedData = data as Material
+            if (isValid) {
+                validatedData = data as Material
+            }
             break
         case 'treasure':
             isValid = validateTreasure(data)
-            validatedData = data as Treasure
+            if (isValid) {
+                validatedData = data as Treasure
+            }
             break
         case 'creatures':
             if (data.edible) {
                 isValid = validateFoodCreature(data)
-                validatedData = data as FoodCreature
+                if (isValid) {
+                    validatedData = data as FoodCreature
+                }
             } else {
                 isValid = validateNonFoodCreature(data)
-                validatedData = data as NonFoodCreature
+                if (isValid) {
+                    validatedData = data as NonFoodCreature
+                }
             }
             break
         case 'region':
             isValid = validateRegion(data)
-            validatedData = data as Region
+            if (isValid) {
+                validatedData = data as Region
+            }
             break
         default:
             throw new Error('Validation type is not a valid type, api validation failed')
     }
 
     if (!isValid) {
-        console.log(data)
         throw new Error('Data does not match with validation type ' + validation_type + ', api validation failed')
     }
 
