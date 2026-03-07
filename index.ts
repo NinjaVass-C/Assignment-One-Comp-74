@@ -213,7 +213,7 @@ function outputShrines(shrines: any) {
 // according to the api documentation, then return the data as its corresponding type
 function validateResponse(data: any, validation_type: string) {
     let isValid = true;
-    let validatedData
+    let validatedData = data
     switch (validation_type) {
         case 'monsters':
             isValid = validateMonsters(data)
