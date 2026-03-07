@@ -45,6 +45,8 @@ type Monster = Entry & {
     drops: string[]
 }
 // extra field needed for entry with category equipment
+// Note: null is not actually documented in api docs, but is required for
+// arrows as they return with null values (see attached document)
 type Equipment = Entry & {
     properties: {
         attack: number | null
@@ -182,7 +184,11 @@ function formatOutput(data: Object) {
                 // conditional logic for equipment properties
             } else if (key === 'properties'){
                 console.log(`${key}:`)
-                if ('attack' in value && value.attack !== 0) {
+                // handle invalid equipment response
+                if ('attack' in value && value.attack === null || 'defense' in value && value.defense === null) {
+                    console.log('   - EDGE CASE - INVALID ATTACK AND DEFENSE RESPONSE')
+                }
+                else if ('attack' in value && value.attack !== 0) {
                     console.log('   - attack: ' + value.attack)
                     console.log('   - defense: Offensive equipment - no defensive value')
                 } else {
