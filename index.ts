@@ -1,4 +1,4 @@
-import { parseArgs } from "util";
+import { parseArgs } from 'util';
 
 /**
  * Date: March 6th, 2026
@@ -46,13 +46,15 @@ type Monster = Entry & {
 }
 // extra field needed for entry with category equipment
 type Equipment = Entry & {
-    attack: string,
-    defense: string,
+    properties: {
+        attack: number | null
+        defense: number | null
+    }
 }
 
 // extra fields needed for entry with category material
 type Material = Entry & {
-    hearts_recovered: number,
+    hearts_recovered: number | null,
     cooking_effect: string
 }
 // response format for category creature that are edible
@@ -75,11 +77,11 @@ function parseCommands() {
         args: Bun.argv,
         options: {
             endpoint: {
-                type: "string",
+                type: 'string',
                 default: undefined,
             },
             pathParam: {
-                type: "string",
+                type: 'string',
                 default: undefined,
             },
         },
@@ -87,7 +89,7 @@ function parseCommands() {
         allowPositionals: true,
     });
     // validate params were passed
-    if (values.pathParam === undefined || values.pathParam === "") {
+    if (values.pathParam === undefined || values.pathParam === '') {
         throw new Error('Error: No path param provided');
     }
     // api only accepts lower case values for path params
@@ -125,7 +127,7 @@ async function fetchData(args: Args) {
     const response = await fetch(url);
     const data: any = await response.json();
     if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}, error message: ${data.message}`);
     }
     switch (args.endpoint) {
         case 'entry':
@@ -138,8 +140,9 @@ async function fetchData(args: Args) {
             const region = data.data
             console.log('Displaying Region Data')
             console.log('---------------------------')
-            // not an entry, go directly to output
-            formatOutput(region as Region)
+            // not an entry, so must pass validation type manually
+            let validData = validateResponse(region as Region, 'region')
+            formatOutput(validData)
             break;
         case 'category':
             const entries = data.data
@@ -158,29 +161,8 @@ async function fetchData(args: Args) {
 // function to format each response relating to compendium entries,
 // assigning them to their respective custom type
 function formatEntry(data: any) {
-    switch (data.category) {
-        case 'monsters':
-            formatOutput(data as Monster)
-            break
-        case 'equipment':
-            formatOutput(data as Equipment)
-            break
-        case 'materials':
-            formatOutput(data as Material)
-            break
-        case 'treasure':
-            formatOutput(data as Treasure)
-            break
-        case 'creatures':
-            if (data.edible) {
-                formatOutput(data as FoodCreature)
-            } else {
-                formatOutput(data as NonFoodCreature)
-            }
-            break
-        default:
-            throw new Error('Invalid category: ' + data.category)
-    }
+    let validData = validateResponse(data, data.category)
+    formatOutput(validData)
 }
 
 // format the console output to make data easier to understand/more readable
@@ -225,6 +207,98 @@ function outputShrines(shrines: any) {
         console.log('   - name: ' + shrine.name)
         console.log('     puzzle: ' + shrine.puzzle)
     });
+}
+
+// based on the response type, ensure that all values are set as expected
+// according to the api documentation, then return the data as its corresponding type
+function validateResponse(data: any, validation_type: string) {
+    let isValid = true;
+    let validatedData
+    switch (validation_type) {
+        case 'monsters':
+            isValid = validateMonsters(data)
+            validatedData = data as Monster
+            break
+        case 'equipment':
+            isValid = validateEquipment(data)
+            validatedData = data as Equipment
+            break
+        case 'materials':
+            isValid = validateMaterials(data)
+            validatedData = data as Material
+            break
+        case 'treasure':
+            isValid = validateTreasure(data)
+            validatedData = data as Treasure
+            break
+        case 'creatures':
+            if (data.edible) {
+                isValid = validateFoodCreature(data)
+                validatedData = data as FoodCreature
+            } else {
+                isValid = validateNonFoodCreature(data)
+                validatedData = data as NonFoodCreature
+            }
+            break
+        case 'region':
+            isValid = validateRegion(data)
+            validatedData = data as Region
+            break
+        default:
+            throw new Error('Validation type is not a valid type, api validation failed')
+    }
+
+    if (!isValid) {
+        console.log(data)
+        throw new Error('Data does not match with validation type ' + validation_type + ', api validation failed')
+    }
+
+    return validatedData
+}
+
+function validateBaseEntry(entry: any) {
+    return typeof entry.id === 'number' &&
+        typeof entry.name === 'string' &&
+        typeof entry.category === 'string' &&
+        typeof entry.description === 'string' &&
+        typeof entry.image === 'string' &&
+        typeof entry.common_locations === 'object' &&
+        typeof entry.dlc === 'boolean'
+}
+
+function validateNonFoodCreature(entry: any) {
+    console.log(typeof entry.edible)
+    return validateMonsters(entry) &&
+        typeof entry.edible === 'boolean'
+}
+function validateFoodCreature(entry: any) {
+    return validateMaterials(entry) &&
+        typeof entry.edible === 'boolean'
+}
+function validateRegion(entry: any) {
+        return typeof entry.name === 'string' &&
+            typeof entry.settlements === 'object' &&
+            typeof entry.shrines === 'object' &&
+            typeof entry.dlc_shrines === 'object'
+}
+function validateEquipment(entry: any) {
+    return validateBaseEntry(entry) &&
+        typeof entry.properties === 'object' &&
+        (typeof entry.properties.attack === 'number' || entry.properties.attack === null) &&
+        (typeof entry.properties.defense === 'number' || entry.properties.defense === null)
+}
+function validateTreasure(entry: any) {
+    return validateMonsters(entry)
+}
+function validateMaterials(entry: any) {
+    return validateBaseEntry(entry) &&
+        typeof (entry.hearts_recovered === 'number' || entry.hearts_recovered === null) &&
+        typeof entry.cooking_effect === 'string'
+}
+function validateMonsters(entry: any) {
+    console.log(typeof entry.drops)
+    return validateBaseEntry(entry) &&
+        typeof entry.drops === 'object'
 }
 
 // main function
