@@ -264,6 +264,8 @@ function validateResponse(data: any, validation_type: string) {
 
     if (!isValid) {
         throw new Error('Data does not match with validation type ' + validation_type + ', api validation failed')
+    } else {
+        console.log('Successfully validated response with validation type ' + validation_type)
     }
 
     return validatedData
