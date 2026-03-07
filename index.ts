@@ -183,11 +183,11 @@ function formatOutput(data: Object) {
             } else if (key === 'properties'){
                 console.log(`${key}:`)
                 if ('attack' in value && value.attack !== 0) {
-                    console.log('attack: ' + value.attack)
-                    console.log('defense: Offensive equipment - no defensive value')
+                    console.log('   - attack: ' + value.attack)
+                    console.log('   - defense: Offensive equipment - no defensive value')
                 } else {
-                    console.log('attack: defensive equipment - no offensive value')
-                    console.log('defense: ' + value.defense)
+                    console.log('   - attack: defensive equipment - no offensive value')
+                    console.log('   - defense: ' + value.defense)
                 }
             }
             else {
